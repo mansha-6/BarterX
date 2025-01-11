@@ -2,10 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-// Define the port number
 const PORT = 8050;
-
-// Function to log requests to a file
 const logRequest = (req) => {
     const logMessage = `[${new Date().toISOString()}] ${req.method} ${req.url}\n`;
     fs.appendFile('log.txt', logMessage, (err) => {
@@ -13,12 +10,8 @@ const logRequest = (req) => {
     });
 };
 
-// Create the HTTP server
 const server = http.createServer((req, res) => {
-    // Log the request
     logRequest(req);
-
-    // Handle different routes
     switch (req.url) {
         case '/':
             res.writeHead(200, { 'Content-Type': 'text/plain' });
@@ -76,11 +69,10 @@ const server = http.createServer((req, res) => {
             break;
 
         case '/about':
-            // Serve the About page with styles
             fs.readFile(path.join(__dirname, 'public', 'about.html'), (err, content) => {
                 if (err) {
-                    res.writeHead(500, { 'Content-Type': 'text/plain' });
-                    res.end('Internal Server Error');
+                    res.writeHead(404, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: "File not found", statusCode: 404 }));
                 } else {
                     res.writeHead(200, { 'Content-Type': 'text/html' });
                     res.end(content);
@@ -97,31 +89,40 @@ const server = http.createServer((req, res) => {
             res.end(JSON.stringify(products))
             break;
 
-        case '/logo.png':
-            // Serve the logo image
-            fs.readFile(path.join(__dirname, 'public', 'logo.png'), (err, content) => {
+        case '/logo':
+            fs.readFile(path.join(__dirname, 'public', 'logo.jpg'), (err, content) => {
                 if (err) {
-                    res.writeHead(500, { 'Content-Type': 'text/plain' });
-                    res.end('Internal Server Error');
+                    res.writeHead(404, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: "File not found", statusCode: 404 }));
                 } else {
-                    res.writeHead(200, { 'Content-Type': 'image/png' });
+                    res.writeHead(200, { 'Content-Type': 'image/jpg' });
+                    res.end(content);
+                }
+                });
+                break;
+            
+        
+        case '/styles':
+                fs.readFile(path.join(__dirname, 'public', 'styles.css'), (err, content) => {
+                if (err) {
+                    res.writeHead(404, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: "File not found", statusCode: 404 }));
+                } else {
+                    res.writeHead(200, { 'Content-Type': 'text/css' });
                     res.end(content);
                 }
             });
             break;
-
-        default:
-            res.writeHead(404,{"Content-Type":"application/json"})
-            let payload = {
-                "error": "Page not found",
-                "statusCode": 404
-            }
-            res.end(JSON.stringify(payload))
-            break;
+            
+            
+            default:
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: "Page not found", statusCode: 404 }));
+                break;
+            
     }
 });
 
-// Start the server
 server.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
